@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIL - CCO2 Sales Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa;
+    color: #1a1a2e;
+    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .header h1 {
+    font-size: 28px;
+    color: #16213e;
+    margin-bottom: 4px;
+  }
+  .header .subtitle {
+    font-size: 14px;
+    color: #64748b;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .card .label {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #16213e;
+  }
+  .card .change {
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .change.up { color: #16a34a; }
+  .change.down { color: #dc2626; }
+  .section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .section h2 {
+    font-size: 18px;
+    color: #16213e;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:hover td {
+    background: #f8fafc;
+  }
+  td.number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 380px;
+  }
+  .year-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .year-btn {
+    padding: 6px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    color: #475569;
+    transition: all 0.15s;
+  }
+  .year-btn:hover { border-color: #3b82f6; color: #3b82f6; }
+  .year-btn.active {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+  }
+  .no-data {
+    text-align: center;
+    color: #94a3b8;
+    padding: 40px;
+    font-size: 14px;
+  }
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 30px;
+    padding-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>GIL Parachute Manufacturing</h1>
+  <p class="subtitle">CCO2 Sales Dashboard</p>
+</div>
+
+<div class="cards" id="summaryCards"></div>
+
+<div class="section">
+  <h2>Yearly CCO2 Breakdown</h2>
+  <div class="year-selector" id="yearButtons"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Lean / Product Line</th>
+        <th>Contact</th>
+        <th>R&amp;D Project</th>
+        <th>Export Status</th>
+        <th>CCO2 Value (INR Lakhs)</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Total CCO2 by Year (Chart)</h2>
+  <div class="chart-wrap">
+    <canvas id="yearChart"></canvas>
+  </div>
+</div>
+
+<div class="section" style="display:none;" id="detailSection">
+  <h2>Year-wise Detail Comparison</h2>
+  <div class="chart-wrap">
+    <canvas id="comparisonChart"></canvas>
+  </div>
+</div>
+
+<div class="footer">
+  GIL Parachute Manufacturing Unit &middot; CCO2 Dashboard &middot; Last updated: <span id="lastUpdated"></span>
+</div>
+
+<script>
+/*
+ * ============================================================
+ *  DATA SECTION - PASTE YOUR EXCEL NUMBERS BELOW
+ * ============================================================
+ *
+ * HOW TO UPDATE:
+ * 1. Open this file in any text editor (Notepad, TextEdit, etc.)
+ * 2. Find each year block below
+ * 3. For each row inside a year, replace the numbers with your Excel data
+ * 4. The format for each row is:
+ *    [ "Category", "Lean/Product", "Contact", "R&D Project", "Export Status", 123.45 ]
+ *    (Last number is CCO2 value in INR Lakhs)
+ * 5. To add a new year, copy a whole block and change the year key
+ * 6. To add/remove rows, just add/remove the [...] lines
+ */
+var salesData = {
+  "FY 2021-22": [
+    ["Main Canopy",    "Defence",         "DRDO",         "Project Alpha",   "Domestic",    245.60],
+    ["Reserve",        "Defence",         "Indian Army",  "Project Alpha",   "Domestic",    112.30],
+    ["Harness",        "Defence",         "IAF",          "Project Beta",    "Domestic",     89.40],
+    ["Main Canopy",    "Civilian Sport",  "SkyDive Ltd",  "-",               "Export",       67.20],
+    ["Reserve",        "Civilian Sport",  "AeroClub EU",  "-",               "Export",       34.50]
+  ],
+  "FY 2022-23": [
+    ["Main Canopy",    "Defence",         "DRDO",         "Project Alpha",   "Domestic",    312.80],
+    ["Reserve",        "Defence",         "Indian Army",  "Project Alpha",   "Domestic",    148.10],
+    ["Harness",        "Defence",         "IAF",          "Project Gamma",   "Domestic",    135.60],
+    ["Main Canopy",    "Civilian Sport",  "SkyDive Ltd",  "-",               "Export",       89.40],
+    ["Reserve",        "Civilian Sport",  "AeroClub EU",  "-",               "Export",       52.70],
+    ["Drogue",         "Defence",         "Navy",         "Project Gamma",   "Domestic",     45.20]
+  ],
+  "FY 2023-24": [
+    ["Main Canopy",    "Defence",         "DRDO",         "Project Delta",   "Domestic",    389.50],
+    ["Reserve",        "Defence",         "Indian Army",  "Project Delta",   "Domestic",    176.30],
+    ["Harness",        "Defence",         "IAF",          "Project Gamma",   "Domestic",    158.40],
+    ["Main Canopy",    "Civilian Sport",  "SkyDive Ltd",  "-",               "Export",      112.60],
+    ["Reserve",        "Civilian Sport",  "AeroClub EU",  "-",               "Export",       68.90],
+    ["Drogue",         "Defence",         "Navy",         "Project Epsilon", "Domestic",     72.10],
+    ["Cargo Chute",    "Civilian Cargo",  "LogiAir Corp", "-",               "Export",       41.30]
+  ],
+  "FY 2024-25": [
+    ["Main Canopy",    "Defence",         "DRDO",         "Project Delta",   "Domestic",    452.00],
+    ["Reserve",        "Defence",         "Indian Army",  "Project Delta",   "Domestic",    205.70],
+    ["Harness",        "Defence",         "IAF",          "Project Zeta",    "Domestic",    189.30],
+    ["Main Canopy",    "Civilian Sport",  "SkyDive Ltd",  "-",               "Export",      145.20],
+    ["Reserve",        "Civilian Sport",  "AeroClub EU",  "-",               "Export",       89.60],
+    ["Drogue",         "Defence",         "Navy",         "Project Epsilon", "Domestic",     95.40],
+    ["Cargo Chute",    "Civilian Cargo",  "LogiAir Corp", "-",               "Export",       58.20],
+    ["Main Canopy",    "Civilian Sport",  "ParaSchool SA", "-",              "Export",       31.00]
+  ]
+};
+/* ============================================================
+ *  END OF DATA SECTION - DO NOT EDIT BELOW THIS LINE
+ * ============================================================ */
+
+var years = Object.keys(salesData).sort();
+var currentYear = years[years.length - 1];
+var chartInstance = null;
+var comparisonChartInstance = null;
+
+document.getElementById("lastUpdated").textContent = new Date().toLocaleDateString("en-IN");
+
+function formatINR(v) { return "Rs " + v.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " L"; }
+
+function buildYearButtons() {
+  var container = document.getElementById("yearButtons");
+  container.innerHTML = "";
+  years.forEach(function(y) {
+    var btn = document.createElement("button");
+    btn.className = "year-btn" + (y === currentYear ? " active" : "");
+    btn.textContent = y;
+    btn.onclick = function() {
+      currentYear = y;
+      document.querySelectorAll(".year-btn").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      renderTable(y);
+    };
+    container.appendChild(btn);
+  });
+}
+
+function renderTable(year) {
+  var data = salesData[year] || [];
+  var tbody = document.getElementById("tableBody");
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="no-data">No data for ' + year + '</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(function(row) {
+    return "<tr>" +
+      "<td>" + row[0] + "</td>" +
+      "<td>" + row[1] + "</td>" +
+      "<td>" + row[2] + "</td>" +
+      "<td>" + row[3] + "</td>" +
+      "<td>" + row[4] + "</td>" +
+      "<td class='number'>" + formatINR(row[5]) + "</td>" +
+      "</tr>";
+  }).join("");
+}
+
+function buildSummaryCards() {
+  var container = document.getElementById("summaryCards");
+
+  var totalPerYear = {};
+  years.forEach(function(y) {
+    totalPerYear[y] = (salesData[y] || []).reduce(function(s, r) { return s + r[5]; }, 0);
+  });
+
+  var latest = totalPerYear[currentYear] || 0;
+  var prevYearIdx = years.indexOf(currentYear) - 1;
+  var prev = prevYearIdx >= 0 ? totalPerYear[years[prevYearIdx]] : 0;
+
+  var exportTotal = (salesData[currentYear] || []).filter(function(r) { return r[4] === "Export"; }).reduce(function(s, r) { return s + r[5]; }, 0);
+  var domesticTotal = (salesData[currentYear] || []).filter(function(r) { return r[4] === "Domestic"; }).reduce(function(s, r) { return s + r[5]; }, 0);
+
+  var cards = [
+    { label: "Total CCO2 (" + currentYear + ")", value: formatINR(latest), change: "", cls: "" },
+    { label: "Row Count", value: (salesData[currentYear] || []).length, change: "", cls: "" }
+  ];
+
+  if (prev > 0) {
+    var pct = ((latest - prev) / prev * 100).toFixed(1);
+    var cls = pct >= 0 ? "up" : "down";
+    var sign = pct >= 0 ? "+" : "";
+    cards.push({ label: "vs " + years[prevYearIdx], value: sign + pct + "%", change: "", cls: cls });
+  }
+
+  cards.push({ label: "Export (" + currentYear + ")", value: formatINR(exportTotal), change: "", cls: "" });
+  cards.push({ label: "Domestic (" + currentYear + ")", value: formatINR(domesticTotal), change: "", cls: "" });
+
+  container.innerHTML = cards.map(function(c) {
+    return '<div class="card">' +
+      '<div class="label">' + c.label + '</div>' +
+      '<div class="value">' + c.value + '</div>' +
+      (c.change ? '<div class="change ' + c.cls + '">' + c.change + '</div>' : '') +
+      '</div>';
+  }).join("");
+}
+
+function renderYearChart() {
+  var ctx = document.getElementById("yearChart").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+
+  var totals = years.map(function(y) {
+    return (salesData[y] || []).reduce(function(s, r) { return s + r[5]; }, 0);
+  });
+
+  var exportTotals = years.map(function(y) {
+    return (salesData[y] || []).filter(function(r) { return r[4] === "Export"; }).reduce(function(s, r) { return s + r[5]; }, 0);
+  });
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: "Domestic CCO2",
+          data: totals.map(function(t, i) { return t - exportTotals[i]; }),
+          backgroundColor: "rgba(59, 130, 246, 0.7)",
+          borderColor: "#3b82f6",
+          borderWidth: 1,
+          borderRadius: 4
+        },
+        {
+          label: "Export CCO2",
+          data: exportTotals,
+          backgroundColor: "rgba(34, 197, 94, 0.7)",
+          borderColor: "#22c55e",
+          borderWidth: 1,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ": Rs " + ctx.raw.toLocaleString("en-IN", {minimumFractionDigits: 2}) + " L";
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: {
+          stacked: true,
+          title: { display: true, text: "CCO2 Value (INR Lakhs)" },
+          ticks: { callback: function(v) { return v.toLocaleString("en-IN"); } }
+        }
+      }
+    }
+  });
+}
+
+function init() {
+  buildYearButtons();
+  renderTable(currentYear);
+  buildSummaryCards();
+  renderYearChart();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+</body>
+</html>
