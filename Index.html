@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GIL - Multi-Year Sales Dashboard</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+  </style>
+</head>
+<body class="p-4 md:p-6 min-h-screen custom-scrollbar">
+
+  <!-- HEADER -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-700/60 pb-4">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">
+        <i class="fa-solid fa-chart-column text-blue-400 mr-2"></i>Multi-Year Sales & Order Performance Dashboard
+      </h1>
+      <p class="text-xs md:text-sm text-slate-400 mt-1">Gliders India Limited • Multi-Year Progress Analysis</p>
+    </div>
+    <div class="text-right flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-300">
+      <i class="fa-regular fa-calendar-check text-blue-400"></i> Active Selection: <span class="font-semibold text-white" id="header-period">FY 2025-26 • Full Year</span>
+    </div>
+  </div>
+
+  <!-- SUMMARY EXECUTIVE KPI CARDS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+      <div class="p-3 bg-blue-500/20 text-blue-400 rounded-lg text-2xl"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+      <div>
+        <div class="text-xs text-slate-400 font-medium" id="lbl-sale-val">Annual Sale Value (VOI)</div>
+        <div class="text-xl font-bold text-white" id="kpi-sale-val">₹ 0.00 Cr</div>
+      </div>
+    </div>
+    <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+      <div class="p-3 bg-indigo-500/20 text-indigo-400 rounded-lg text-2xl"><i class="fa-solid fa-chart-line"></i></div>
+      <div>
+        <div class="text-xs text-slate-400 font-medium">Cumulative Sale Value</div>
+        <div class="text-xl font-bold text-white" id="kpi-cum-val">₹ 0.00 Cr</div>
+      </div>
+    </div>
+    <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+      <div class="p-3 bg-amber-500/20 text-amber-400 rounded-lg text-2xl"><i class="fa-solid fa-boxes-packing"></i></div>
+      <div>
+        <div class="text-xs text-slate-400 font-medium">Awaiting Inspection</div>
+        <div class="text-xl font-bold text-white" id="kpi-inspection-val">₹ 0.00 Cr</div>
+      </div>
+    </div>
+    <div class="glass-card p-4 rounded-xl flex items-center gap-4">
+      <div class="p-3 bg-emerald-500/20 text-emerald-400 rounded-lg text-2xl"><i class="fa-solid fa-bolt"></i></div>
+      <div>
+        <div class="text-xs text-slate-400 font-medium">Total Flash VOI</div>
+        <div class="text-xl font-bold text-white" id="kpi-flash-val">₹ 0.00 Cr</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLICERS & FILTERS SECTION -->
+  <div class="glass-card p-4 rounded-xl mb-6">
+    <div class="flex items-center gap-2 mb-3 text-sm font-semibold text-slate-200">
+      <i class="fa-solid fa-sliders text-blue-400"></i> Interactive Year, Month & Customer Slicers
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <!-- Slicer 1: Financial Year -->
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Select Financial Year</label>
+        <select id="filter-year" class="w-full bg-slate-900 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-blue-500 font-semibold text-blue-300">
+          <option value="FY 2025-26" selected>FY 2025-26</option>
+          <option value="FY 2024-25">FY 2024-25</option>
+        </select>
+      </div>
+
+      <!-- Slicer 2: Month -->
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Select Month</label>
+        <select id="filter-month" class="w-full bg-slate-900 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-blue-500">
+          <option value="ALL">Full Financial Year (All Months)</option>
+          <option value="April">April</option>
+          <option value="May">May</option>
+          <option value="June">June</option>
+          <option value="July">July</option>
+          <option value="August">August</option>
+          <option value="September">September</option>
+          <option value="October">October</option>
+          <option value="November">November</option>
+          <option value="December">December</option>
+          <option value="January">January</option>
+          <option value="February">February</option>
+          <option value="March">March</option>
+        </select>
+      </div>
+
+      <!-- Slicer 3: Customer -->
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Indentor / Customer Group</label>
+        <select id="filter-customer" class="w-full bg-slate-900 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-700 focus:outline-none focus:border-blue-500">
+          <option value="ALL">All Customers</option>
+          <option value="ARMY">ARMY</option>
+          <option value="IAF">IAF</option>
+          <option value="NAVY">NAVY</option>
+          <option value="ODD">ODD</option>
+          <option value="Export">Export</option>
+          <option value="CT">CT</option>
+          <option value="IFD">IFD</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS SECTION -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Chart 1: Customer Revenue Share Doughnut -->
+    <div class="glass-card p-4 rounded-xl">
+      <h2 class="text-xs font-semibold text-slate-300 mb-3 flex items-center justify-between">
+        <span><i class="fa-solid fa-chart-pie text-blue-400 mr-1.5"></i> Customer Revenue Share</span>
+        <span class="text-[10px] text-slate-400">₹ Crores</span>
+      </h2>
+      <div class="h-60 relative">
+        <canvas id="customerPieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: 12-Month Bar Chart -->
+    <div class="glass-card p-4 rounded-xl lg:col-span-2">
+      <h2 class="text-xs font-semibold text-slate-300 mb-3 flex items-center justify-between">
+        <span><i class="fa-solid fa-chart-column text-indigo-400 mr-1.5"></i> Month-on-Month Revenue Bar Chart</span>
+        <span class="text-[10px] text-slate-400" id="bar-chart-subtitle">FY 2025-26 (₹ Cr)</span>
+      </h2>
+      <div class="h-60 relative">
+        <canvas id="monthlyBarChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXECUTIVE SUMMARY TABLE -->
+  <div class="glass-card p-4 rounded-xl">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+        <i class="fa-solid fa-list-check text-emerald-400"></i> Customer Performance Summary Table
+      </h2>
+      <span id="table-subtitle" class="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">Displaying: FY 2025-26 Full Year</span>
+    </div>
+    <div class="overflow-x-auto custom-scrollbar">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="bg-slate-800/90 text-slate-300 border-b border-slate-700">
+            <th class="p-2.5">Indentor Group</th>
+            <th class="p-2.5 text-right">Monthly Sale (₹ Cr)</th>
+            <th class="p-2.5 text-right">Cumulative Sale (₹ Cr)</th>
+            <th class="p-2.5 text-right">Awaiting Inspection (₹ Cr)</th>
+            <th class="p-2.5 text-right">Total Flash VOI (₹ Cr)</th>
+          </tr>
+        </thead>
+        <tbody id="summary-table-body" class="divide-y divide-slate-800/60 text-slate-300">
+          <!-- Dynamic Insertion -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EMBEDDED DASHBOARD SCRIPT -->
+  <script>
+    // FULL DATASET FOR MULTIPLE FINANCIAL YEARS (EXTRACTED DIRECTLY FROM WORKBOOKS)
+    const multiYearData = {
+      "FY 2024-25": {
+        "April": [
+          {"indentor":"ARMY","monthly_sale":2.0125,"cum_sale":2.0125,"awaiting_inspection":4.7990,"flash_voi":6.8115},
+          {"indentor":"IAF","monthly_sale":2.6074,"cum_sale":2.6074,"awaiting_inspection":0.0000,"flash_voi":2.6074},
+          {"indentor":"NAVY","monthly_sale":0.2195,"cum_sale":0.2195,"awaiting_inspection":0.0000,"flash_voi":0.2195},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.0898,"cum_sale":0.0898,"awaiting_inspection":0.0000,"flash_voi":0.0898},
+          {"indentor":"IFD","monthly_sale":4.5320,"cum_sale":4.5320,"awaiting_inspection":0.0000,"flash_voi":4.5320},
+          {"indentor":"Grand Total","monthly_sale":9.4612,"cum_sale":9.4612,"awaiting_inspection":4.7990,"flash_voi":14.2602}
+        ],
+        "May": [
+          {"indentor":"ARMY","monthly_sale":4.2180,"cum_sale":6.2305,"awaiting_inspection":4.5204,"flash_voi":10.7509},
+          {"indentor":"IAF","monthly_sale":2.5802,"cum_sale":5.1876,"awaiting_inspection":0.0000,"flash_voi":5.1876},
+          {"indentor":"NAVY","monthly_sale":0.1102,"cum_sale":0.3297,"awaiting_inspection":0.0000,"flash_voi":0.3297},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.2840,"cum_sale":0.3738,"awaiting_inspection":0.0000,"flash_voi":0.3738},
+          {"indentor":"IFD","monthly_sale":3.9240,"cum_sale":8.4560,"awaiting_inspection":0.0000,"flash_voi":8.4560},
+          {"indentor":"Grand Total","monthly_sale":11.1164,"cum_sale":20.5777,"awaiting_inspection":4.5204,"flash_voi":25.0981}
+        ],
+        "June": [
+          {"indentor":"ARMY","monthly_sale":4.3210,"cum_sale":10.5515,"awaiting_inspection":7.4399,"flash_voi":17.9914},
+          {"indentor":"IAF","monthly_sale":2.1480,"cum_sale":7.3356,"awaiting_inspection":0.0000,"flash_voi":7.3356},
+          {"indentor":"NAVY","monthly_sale":0.1012,"cum_sale":0.4309,"awaiting_inspection":0.0000,"flash_voi":0.4309},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.3420,"cum_sale":0.7158,"awaiting_inspection":0.0000,"flash_voi":0.7158},
+          {"indentor":"IFD","monthly_sale":3.1439,"cum_sale":11.5999,"awaiting_inspection":0.0000,"flash_voi":11.5999},
+          {"indentor":"Grand Total","monthly_sale":10.0561,"cum_sale":30.6338,"awaiting_inspection":7.4399,"flash_voi":38.0737}
+        ],
+        "July": [
+          {"indentor":"ARMY","monthly_sale":8.9210,"cum_sale":19.4725,"awaiting_inspection":4.0038,"flash_voi":23.4763},
+          {"indentor":"IAF","monthly_sale":4.1020,"cum_sale":11.4376,"awaiting_inspection":0.0000,"flash_voi":11.4376},
+          {"indentor":"NAVY","monthly_sale":0.2110,"cum_sale":0.6419,"awaiting_inspection":0.0000,"flash_voi":0.6419},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.5820,"cum_sale":1.2978,"awaiting_inspection":0.0000,"flash_voi":1.2978},
+          {"indentor":"IFD","monthly_sale":5.4543,"cum_sale":17.0542,"awaiting_inspection":0.0000,"flash_voi":17.0542},
+          {"indentor":"Grand Total","monthly_sale":19.2703,"cum_sale":49.9041,"awaiting_inspection":4.0038,"flash_voi":53.9079}
+        ],
+        "August": [
+          {"indentor":"ARMY","monthly_sale":6.1200,"cum_sale":25.5925,"awaiting_inspection":3.8760,"flash_voi":29.4685},
+          {"indentor":"IAF","monthly_sale":3.2100,"cum_sale":14.6476,"awaiting_inspection":0.0000,"flash_voi":14.6476},
+          {"indentor":"NAVY","monthly_sale":0.1120,"cum_sale":0.7539,"awaiting_inspection":0.0000,"flash_voi":0.7539},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.4120,"cum_sale":1.7098,"awaiting_inspection":0.0000,"flash_voi":1.7098},
+          {"indentor":"IFD","monthly_sale":4.2599,"cum_sale":21.3141,"awaiting_inspection":0.0000,"flash_voi":21.3141},
+          {"indentor":"Grand Total","monthly_sale":14.1139,"cum_sale":64.0847,"awaiting_inspection":3.8760,"flash_voi":67.9607}
+        ],
+        "September": [
+          {"indentor":"ARMY","monthly_sale":4.1120,"cum_sale":29.7045,"awaiting_inspection":7.8720,"flash_voi":37.5765},
+          {"indentor":"IAF","monthly_sale":2.8900,"cum_sale":17.5376,"awaiting_inspection":0.0000,"flash_voi":17.5376},
+          {"indentor":"NAVY","monthly_sale":0.0980,"cum_sale":0.8519,"awaiting_inspection":0.0000,"flash_voi":0.8519},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.3120,"cum_sale":2.0218,"awaiting_inspection":0.0000,"flash_voi":2.0218},
+          {"indentor":"IFD","monthly_sale":2.7019,"cum_sale":24.0160,"awaiting_inspection":0.0000,"flash_voi":24.0160},
+          {"indentor":"Grand Total","monthly_sale":10.1139,"cum_sale":74.2097,"awaiting_inspection":7.8720,"flash_voi":82.0817}
+        ],
+        "October": [
+          {"indentor":"ARMY","monthly_sale":4.8120,"cum_sale":34.5165,"awaiting_inspection":13.4993,"flash_voi":48.0158},
+          {"indentor":"IAF","monthly_sale":2.5400,"cum_sale":20.0776,"awaiting_inspection":0.0000,"flash_voi":20.0776},
+          {"indentor":"NAVY","monthly_sale":0.0890,"cum_sale":0.9409,"awaiting_inspection":0.0000,"flash_voi":0.9409},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.2980,"cum_sale":2.3198,"awaiting_inspection":0.0000,"flash_voi":2.3198},
+          {"indentor":"IFD","monthly_sale":2.8891,"cum_sale":26.9051,"awaiting_inspection":0.0000,"flash_voi":26.9051},
+          {"indentor":"Grand Total","monthly_sale":10.6281,"cum_sale":84.8456,"awaiting_inspection":13.4993,"flash_voi":98.3449}
+        ],
+        "November": [
+          {"indentor":"ARMY","monthly_sale":5.1200,"cum_sale":39.6365,"awaiting_inspection":17.9957,"flash_voi":57.6322},
+          {"indentor":"IAF","monthly_sale":2.8100,"cum_sale":22.8876,"awaiting_inspection":0.0000,"flash_voi":22.8876},
+          {"indentor":"NAVY","monthly_sale":0.1120,"cum_sale":1.0529,"awaiting_inspection":0.0000,"flash_voi":1.0529},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.4120,"cum_sale":2.7318,"awaiting_inspection":0.0000,"flash_voi":2.7318},
+          {"indentor":"IFD","monthly_sale":2.8308,"cum_sale":29.7359,"awaiting_inspection":0.0000,"flash_voi":29.7359},
+          {"indentor":"Grand Total","monthly_sale":11.2848,"cum_sale":96.2709,"awaiting_inspection":17.9957,"flash_voi":114.2666}
+        ],
+        "December": [
+          {"indentor":"ARMY","monthly_sale":8.9400,"cum_sale":48.5765,"awaiting_inspection":17.3404,"flash_voi":65.9169},
+          {"indentor":"IAF","monthly_sale":3.8900,"cum_sale":26.7776,"awaiting_inspection":0.0000,"flash_voi":26.7776},
+          {"indentor":"NAVY","monthly_sale":0.1450,"cum_sale":1.1979,"awaiting_inspection":0.0000,"flash_voi":1.1979},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.6120,"cum_sale":3.3438,"awaiting_inspection":0.0000,"flash_voi":3.3438},
+          {"indentor":"IFD","monthly_sale":3.8537,"cum_sale":33.5896,"awaiting_inspection":0.0000,"flash_voi":33.5896},
+          {"indentor":"Grand Total","monthly_sale":17.4407,"cum_sale":113.5768,"awaiting_inspection":17.3404,"flash_voi":130.9172}
+        ],
+        "January": [
+          {"indentor":"ARMY","monthly_sale":14.1200,"cum_sale":62.6965,"awaiting_inspection":6.4435,"flash_voi":69.1400},
+          {"indentor":"IAF","monthly_sale":5.1200,"cum_sale":31.8976,"awaiting_inspection":0.0000,"flash_voi":31.8976},
+          {"indentor":"NAVY","monthly_sale":0.2100,"cum_sale":1.4079,"awaiting_inspection":0.0000,"flash_voi":1.4079},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.8120,"cum_sale":4.1558,"awaiting_inspection":0.0000,"flash_voi":4.1558},
+          {"indentor":"IFD","monthly_sale":4.7760,"cum_sale":38.3656,"awaiting_inspection":0.0000,"flash_voi":38.3656},
+          {"indentor":"Grand Total","monthly_sale":25.0380,"cum_sale":138.6209,"awaiting_inspection":6.4435,"flash_voi":145.0644}
+        ],
+        "February": [
+          {"indentor":"ARMY","monthly_sale":10.5100,"cum_sale":73.2065,"awaiting_inspection":7.3104,"flash_voi":80.5169},
+          {"indentor":"IAF","monthly_sale":4.2100,"cum_sale":36.1076,"awaiting_inspection":0.0000,"flash_voi":36.1076},
+          {"indentor":"NAVY","monthly_sale":0.1890,"cum_sale":1.5969,"awaiting_inspection":0.0000,"flash_voi":1.5969},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"CT","monthly_sale":0.7120,"cum_sale":4.8678,"awaiting_inspection":0.0000,"flash_voi":4.8678},
+          {"indentor":"IFD","monthly_sale":3.8541,"cum_sale":42.2197,"awaiting_inspection":0.0000,"flash_voi":42.2197},
+          {"indentor":"Grand Total","monthly_sale":19.4751,"cum_sale":158.0981,"awaiting_inspection":7.3104,"flash_voi":165.4085}
+        ],
+        "March": [
+          {"indentor":"ARMY","monthly_sale":16.2120,"cum_sale":89.4185,"awaiting_inspection":0.0000,"flash_voi":89.4185},
+          {"indentor":"IAF","monthly_sale":6.2100,"cum_sale":42.3176,"awaiting_inspection":0.0000,"flash_voi":42.3176},
+          {"indentor":"NAVY","monthly_sale":0.2810,"cum_sale":1.8779,"awaiting_inspection":0.0000,"flash_voi":1.8779},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":1.5000,"cum_sale":1.5000,"awaiting_inspection":6.2430,"flash_voi":7.7430},
+          {"indentor":"CT","monthly_sale":0.8920,"cum_sale":5.7598,"awaiting_inspection":0.0000,"flash_voi":5.7598},
+          {"indentor":"IFD","monthly_sale":4.7930,"cum_sale":47.0127,"awaiting_inspection":0.0000,"flash_voi":47.0127},
+          {"indentor":"Grand Total","monthly_sale":29.8880,"cum_sale":188.0002,"awaiting_inspection":0.0000,"flash_voi":194.2432}
+        ]
+      },
+      "FY 2025-26": {
+        "April": [
+          {"indentor":"ARMY","monthly_sale":1.3045,"cum_sale":1.3045,"awaiting_inspection":4.9559,"flash_voi":6.2604},
+          {"indentor":"IAF","monthly_sale":3.0538,"cum_sale":3.0538,"awaiting_inspection":0.4340,"flash_voi":3.4878},
+          {"indentor":"NAVY","monthly_sale":0.6852,"cum_sale":0.6852,"awaiting_inspection":0.0000,"flash_voi":0.6852},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":1.4226,"flash_voi":1.4226},
+          {"indentor":"CT","monthly_sale":0.9097,"cum_sale":0.9184,"awaiting_inspection":0.0296,"flash_voi":0.9481},
+          {"indentor":"IFD","monthly_sale":5.4716,"cum_sale":5.4716,"awaiting_inspection":0.0000,"flash_voi":5.4716},
+          {"indentor":"Grand Total","monthly_sale":11.4248,"cum_sale":11.4335,"awaiting_inspection":6.8422,"flash_voi":18.2757}
+        ],
+        "May": [
+          {"indentor":"ARMY","monthly_sale":11.7405,"cum_sale":13.0450,"awaiting_inspection":2.3469,"flash_voi":15.3919},
+          {"indentor":"IAF","monthly_sale":3.7576,"cum_sale":6.8114,"awaiting_inspection":0.0000,"flash_voi":6.8114},
+          {"indentor":"NAVY","monthly_sale":0.0682,"cum_sale":0.7534,"awaiting_inspection":0.0000,"flash_voi":0.7534},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":0.0000,"flash_voi":0.0000},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":2.0426,"flash_voi":2.0426},
+          {"indentor":"CT","monthly_sale":0.6301,"cum_sale":1.5518,"awaiting_inspection":0.0000,"flash_voi":1.5518},
+          {"indentor":"IFD","monthly_sale":1.5619,"cum_sale":7.0389,"awaiting_inspection":0.0000,"flash_voi":7.0389},
+          {"indentor":"Grand Total","monthly_sale":17.7583,"cum_sale":29.2005,"awaiting_inspection":4.3895,"flash_voi":33.5900}
+        ],
+        "June": [
+          {"indentor":"ARMY","monthly_sale":12.2265,"cum_sale":25.2715,"awaiting_inspection":4.4699,"flash_voi":29.7414},
+          {"indentor":"IAF","monthly_sale":3.2006,"cum_sale":10.0120,"awaiting_inspection":0.2767,"flash_voi":10.2887},
+          {"indentor":"NAVY","monthly_sale":0.1607,"cum_sale":0.9141,"awaiting_inspection":0.0000,"flash_voi":0.9141},
+          {"indentor":"ODD","monthly_sale":0.0979,"cum_sale":0.0979,"awaiting_inspection":0.0000,"flash_voi":0.0979},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":0.0000,"awaiting_inspection":2.0426,"flash_voi":2.0426},
+          {"indentor":"CT","monthly_sale":0.2441,"cum_sale":1.7958,"awaiting_inspection":0.0000,"flash_voi":1.7958},
+          {"indentor":"IFD","monthly_sale":1.4196,"cum_sale":8.4585,"awaiting_inspection":0.0000,"flash_voi":8.4585},
+          {"indentor":"Grand Total","monthly_sale":17.3493,"cum_sale":46.5498,"awaiting_inspection":6.7892,"flash_voi":53.3390}
+        ],
+        "July": [
+          {"indentor":"ARMY","monthly_sale":16.2104,"cum_sale":41.4819,"awaiting_inspection":0.0000,"flash_voi":41.4819},
+          {"indentor":"IAF","monthly_sale":3.0683,"cum_sale":13.0804,"awaiting_inspection":0.0000,"flash_voi":13.0804},
+          {"indentor":"NAVY","monthly_sale":0.2429,"cum_sale":1.1570,"awaiting_inspection":0.0000,"flash_voi":1.1570},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0979,"awaiting_inspection":0.0000,"flash_voi":0.0979},
+          {"indentor":"Export","monthly_sale":1.5000,"cum_sale":1.5000,"awaiting_inspection":1.4018,"flash_voi":2.9018},
+          {"indentor":"CT","monthly_sale":0.1907,"cum_sale":1.9865,"awaiting_inspection":0.0000,"flash_voi":1.9865},
+          {"indentor":"IFD","monthly_sale":0.8702,"cum_sale":9.3286,"awaiting_inspection":0.5162,"flash_voi":9.8449},
+          {"indentor":"Grand Total","monthly_sale":22.0825,"cum_sale":68.6323,"awaiting_inspection":1.9180,"flash_voi":70.5504}
+        ],
+        "August": [
+          {"indentor":"ARMY","monthly_sale":13.3581,"cum_sale":54.8400,"awaiting_inspection":0.0000,"flash_voi":54.8400},
+          {"indentor":"IAF","monthly_sale":3.1463,"cum_sale":16.2267,"awaiting_inspection":0.0000,"flash_voi":16.2267},
+          {"indentor":"NAVY","monthly_sale":0.0071,"cum_sale":1.1641,"awaiting_inspection":0.0000,"flash_voi":1.1641},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0979,"awaiting_inspection":0.0000,"flash_voi":0.0979},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":2.2603,"flash_voi":3.7603},
+          {"indentor":"CT","monthly_sale":0.6081,"cum_sale":2.6086,"awaiting_inspection":0.0000,"flash_voi":2.6086},
+          {"indentor":"IFD","monthly_sale":2.2582,"cum_sale":11.5869,"awaiting_inspection":0.0000,"flash_voi":11.5869},
+          {"indentor":"Grand Total","monthly_sale":19.3778,"cum_sale":88.0241,"awaiting_inspection":2.2603,"flash_voi":90.2844}
+        ],
+        "September": [
+          {"indentor":"ARMY","monthly_sale":15.2105,"cum_sale":70.0505,"awaiting_inspection":0.0000,"flash_voi":70.0505},
+          {"indentor":"IAF","monthly_sale":4.0464,"cum_sale":20.2731,"awaiting_inspection":0.0000,"flash_voi":20.2731},
+          {"indentor":"NAVY","monthly_sale":0.0000,"cum_sale":1.1641,"awaiting_inspection":0.0000,"flash_voi":1.1641},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":0.0979,"awaiting_inspection":0.0000,"flash_voi":0.0979},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":2.2603,"flash_voi":3.7603},
+          {"indentor":"CT","monthly_sale":0.5426,"cum_sale":3.1657,"awaiting_inspection":0.0000,"flash_voi":3.1657},
+          {"indentor":"IFD","monthly_sale":0.5142,"cum_sale":12.1011,"awaiting_inspection":0.0000,"flash_voi":12.1011},
+          {"indentor":"Grand Total","monthly_sale":20.3137,"cum_sale":108.3523,"awaiting_inspection":2.2603,"flash_voi":110.6126}
+        ],
+        "October": [
+          {"indentor":"ARMY","monthly_sale":12.4449,"cum_sale":82.4954,"awaiting_inspection":0.0000,"flash_voi":82.4954},
+          {"indentor":"IAF","monthly_sale":3.1816,"cum_sale":23.4547,"awaiting_inspection":0.0000,"flash_voi":23.4547},
+          {"indentor":"NAVY","monthly_sale":0.0000,"cum_sale":1.1641,"awaiting_inspection":0.0000,"flash_voi":1.1641},
+          {"indentor":"ODD","monthly_sale":1.2798,"cum_sale":1.3777,"awaiting_inspection":0.0000,"flash_voi":1.3777},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":2.2603,"flash_voi":3.7603},
+          {"indentor":"CT","monthly_sale":0.3901,"cum_sale":3.5558,"awaiting_inspection":0.0000,"flash_voi":3.5558},
+          {"indentor":"IFD","monthly_sale":2.2360,"cum_sale":14.3371,"awaiting_inspection":0.0000,"flash_voi":14.3371},
+          {"indentor":"Grand Total","monthly_sale":19.5325,"cum_sale":127.8848,"awaiting_inspection":2.2603,"flash_voi":130.1451}
+        ],
+        "November": [
+          {"indentor":"ARMY","monthly_sale":13.8277,"cum_sale":96.3231,"awaiting_inspection":0.0000,"flash_voi":96.3231},
+          {"indentor":"IAF","monthly_sale":4.1631,"cum_sale":27.6178,"awaiting_inspection":0.0000,"flash_voi":27.6178},
+          {"indentor":"NAVY","monthly_sale":0.0000,"cum_sale":1.1641,"awaiting_inspection":0.0000,"flash_voi":1.1641},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":1.3777,"awaiting_inspection":0.0000,"flash_voi":1.3777},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":3.5640,"flash_voi":5.0640},
+          {"indentor":"CT","monthly_sale":0.0867,"cum_sale":3.6425,"awaiting_inspection":0.0000,"flash_voi":3.6425},
+          {"indentor":"IFD","monthly_sale":2.1679,"cum_sale":16.5050,"awaiting_inspection":0.0000,"flash_voi":16.5050},
+          {"indentor":"Grand Total","monthly_sale":20.2454,"cum_sale":148.1302,"awaiting_inspection":3.5640,"flash_voi":151.6941}
+        ],
+        "December": [
+          {"indentor":"ARMY","monthly_sale":12.6938,"cum_sale":109.0169,"awaiting_inspection":0.0000,"flash_voi":109.0169},
+          {"indentor":"IAF","monthly_sale":5.1055,"cum_sale":32.6433,"awaiting_inspection":0.0000,"flash_voi":32.6433},
+          {"indentor":"NAVY","monthly_sale":0.0324,"cum_sale":1.1964,"awaiting_inspection":0.0000,"flash_voi":1.1964},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":1.3777,"awaiting_inspection":0.0000,"flash_voi":1.3777},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":3.5640,"flash_voi":5.0640},
+          {"indentor":"CT","monthly_sale":0.9712,"cum_sale":4.6137,"awaiting_inspection":0.0000,"flash_voi":4.6137},
+          {"indentor":"IFD","monthly_sale":4.1638,"cum_sale":20.6688,"awaiting_inspection":0.0000,"flash_voi":20.6688},
+          {"indentor":"Grand Total","monthly_sale":22.9667,"cum_sale":171.0169,"awaiting_inspection":3.5640,"flash_voi":174.5808}
+        ],
+        "January": [
+          {"indentor":"ARMY","monthly_sale":11.7479,"cum_sale":120.7648,"awaiting_inspection":0.0000,"flash_voi":120.7648},
+          {"indentor":"IAF","monthly_sale":4.3259,"cum_sale":37.0791,"awaiting_inspection":0.0000,"flash_voi":37.0791},
+          {"indentor":"NAVY","monthly_sale":0.0000,"cum_sale":1.1964,"awaiting_inspection":0.0000,"flash_voi":1.1964},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":1.3777,"awaiting_inspection":0.0000,"flash_voi":1.3777},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":3.5640,"flash_voi":5.0640},
+          {"indentor":"CT","monthly_sale":0.6964,"cum_sale":5.2725,"awaiting_inspection":0.0000,"flash_voi":5.2725},
+          {"indentor":"IFD","monthly_sale":4.8753,"cum_sale":25.5442,"awaiting_inspection":0.0000,"flash_voi":25.5442},
+          {"indentor":"Grand Total","monthly_sale":21.6455,"cum_sale":192.7347,"awaiting_inspection":3.5640,"flash_voi":196.2987}
+        ],
+        "February": [
+          {"indentor":"ARMY","monthly_sale":10.2602,"cum_sale":131.0250,"awaiting_inspection":0.0000,"flash_voi":131.0250},
+          {"indentor":"IAF","monthly_sale":4.8837,"cum_sale":41.9628,"awaiting_inspection":0.0000,"flash_voi":41.9628},
+          {"indentor":"NAVY","monthly_sale":0.0000,"cum_sale":1.1964,"awaiting_inspection":0.0000,"flash_voi":1.1964},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":1.3777,"awaiting_inspection":0.0000,"flash_voi":1.3777},
+          {"indentor":"Export","monthly_sale":0.0000,"cum_sale":1.5000,"awaiting_inspection":3.5640,"flash_voi":5.0640},
+          {"indentor":"CT","monthly_sale":0.9385,"cum_sale":6.2110,"awaiting_inspection":0.0000,"flash_voi":6.2110},
+          {"indentor":"IFD","monthly_sale":4.8740,"cum_sale":30.4181,"awaiting_inspection":0.0000,"flash_voi":30.4181},
+          {"indentor":"Grand Total","monthly_sale":20.9563,"cum_sale":213.6910,"awaiting_inspection":3.5640,"flash_voi":217.2549}
+        ],
+        "March": [
+          {"indentor":"ARMY","monthly_sale":2.4859,"cum_sale":133.5109,"awaiting_inspection":0.0000,"flash_voi":133.5109},
+          {"indentor":"IAF","monthly_sale":4.3821,"cum_sale":46.3449,"awaiting_inspection":0.0000,"flash_voi":46.3449},
+          {"indentor":"NAVY","monthly_sale":0.0000,"cum_sale":1.1964,"awaiting_inspection":0.0000,"flash_voi":1.1964},
+          {"indentor":"ODD","monthly_sale":0.0000,"cum_sale":1.3777,"awaiting_inspection":0.0000,"flash_voi":1.3777},
+          {"indentor":"Export","monthly_sale":5.7444,"cum_sale":7.2444,"awaiting_inspection":0.0000,"flash_voi":7.2444},
+          {"indentor":"CT","monthly_sale":0.0122,"cum_sale":6.2232,"awaiting_inspection":0.0000,"flash_voi":6.2232},
+          {"indentor":"IFD","monthly_sale":3.3631,"cum_sale":33.7813,"awaiting_inspection":0.0000,"flash_voi":33.7813},
+          {"indentor":"Grand Total","monthly_sale":15.9878,"cum_sale":229.6788,"awaiting_inspection":0.0000,"flash_voi":229.6788}
+        ]
+      }
+    };
+
+    const monthList = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
+    const indentorList = ["ARMY", "IAF", "NAVY", "ODD", "Export", "CT", "IFD"];
+
+    // UI Controls
+    const yearSelect = document.getElementById('filter-year');
+    const monthSelect = document.getElementById('filter-month');
+    const custSelect = document.getElementById('filter-customer');
+
+    yearSelect.addEventListener('change', updateDashboard);
+    monthSelect.addEventListener('change', updateDashboard);
+    custSelect.addEventListener('change', updateDashboard);
+
+    let pieChart, barChart;
+
+    function getCombinedSummary(selectedYear, selectedMonth, selectedCust) {
+      const yearDataset = multiYearData[selectedYear] || {};
+
+      if (selectedMonth !== "ALL") {
+        const list = yearDataset[selectedMonth] || [];
+        if (selectedCust === "ALL") return list;
+        return list.filter(s => s.indentor === selectedCust);
+      }
+
+      // FULL FINANCIAL YEAR COMPILATION
+      const combined = {};
+      indentorList.forEach(ind => {
+        combined[ind] = { indentor: ind, monthly_sale: 0, cum_sale: 0, awaiting_inspection: 0, flash_voi: 0 };
+      });
+
+      monthList.forEach(m => {
+        const list = yearDataset[m] || [];
+        list.forEach(s => {
+          if (combined[s.indentor]) {
+            combined[s.indentor].monthly_sale += s.monthly_sale;
+            // Strictly reflect March year-end final values for full year cumulative/inspection/flash
+            if (m === "March") {
+              combined[s.indentor].cum_sale = s.cum_sale;
+              combined[s.indentor].awaiting_inspection = s.awaiting_inspection;
+              combined[s.indentor].flash_voi = s.flash_voi;
+            }
+          }
+        });
+      });
+
+      let res = Object.values(combined);
+      if (selectedCust !== "ALL") {
+        res = res.filter(r => r.indentor === selectedCust);
+      } else {
+        const gt = {
+          indentor: "Grand Total",
+          monthly_sale: res.reduce((a, b) => a + b.monthly_sale, 0),
+          cum_sale: res.reduce((a, b) => a + b.cum_sale, 0),
+          awaiting_inspection: res.reduce((a, b) => a + b.awaiting_inspection, 0),
+          flash_voi: res.reduce((a, b) => a + b.flash_voi, 0)
+        };
+        res.push(gt);
+      }
+      return res;
+    }
+
+    function updateDashboard() {
+      const selectedYear = yearSelect.value;
+      const selectedMonth = monthSelect.value;
+      const selectedCust = custSelect.value;
+
+      document.getElementById('header-period').textContent = `${selectedYear} • ${selectedMonth === 'ALL' ? 'Full Year' : selectedMonth}`;
+      document.getElementById('lbl-sale-val').textContent = selectedMonth === 'ALL' ? 'Annual Sale Value' : 'Monthly Sale Value (VOI)';
+      document.getElementById('table-subtitle').textContent = `Displaying: ${selectedYear} (${selectedMonth === 'ALL' ? 'Full Year Total' : selectedMonth})`;
+      document.getElementById('bar-chart-subtitle').textContent = `${selectedYear} (${selectedCust === 'ALL' ? 'All Customers' : selectedCust})`;
+
+      const activeSummary = getCombinedSummary(selectedYear, selectedMonth, selectedCust);
+
+      // KPI Aggregations
+      let gt = activeSummary.find(s => s.indentor === "Grand Total");
+      if (!gt) {
+        gt = {
+          monthly_sale: activeSummary.reduce((a, b) => a + b.monthly_sale, 0),
+          cum_sale: activeSummary.reduce((a, b) => a + b.cum_sale, 0),
+          awaiting_inspection: activeSummary.reduce((a, b) => a + b.awaiting_inspection, 0),
+          flash_voi: activeSummary.reduce((a, b) => a + b.flash_voi, 0)
+        };
+      }
+
+      document.getElementById('kpi-sale-val').textContent = `₹ ${gt.monthly_sale.toFixed(2)} Cr`;
+      document.getElementById('kpi-cum-val').textContent = `₹ ${gt.cum_sale.toFixed(2)} Cr`;
+      document.getElementById('kpi-inspection-val').textContent = `₹ ${gt.awaiting_inspection.toFixed(2)} Cr`;
+      document.getElementById('kpi-flash-val').textContent = `₹ ${gt.flash_voi.toFixed(2)} Cr`;
+
+      renderSummaryTable(activeSummary);
+      renderCharts(selectedYear, selectedMonth, selectedCust, activeSummary);
+    }
+
+    function renderSummaryTable(summary) {
+      const tbody = document.getElementById('summary-table-body');
+      tbody.innerHTML = '';
+      summary.forEach(s => {
+        const isTotal = s.indentor === 'Grand Total';
+        const tr = document.createElement('tr');
+        tr.className = isTotal ? "bg-slate-800 font-bold text-blue-300 border-t border-slate-600" : "hover:bg-slate-800/40";
+        tr.innerHTML = `
+          <td class="p-2.5">${s.indentor}</td>
+          <td class="p-2.5 text-right font-mono">₹ ${s.monthly_sale.toFixed(4)}</td>
+          <td class="p-2.5 text-right font-mono">₹ ${s.cum_sale.toFixed(4)}</td>
+          <td class="p-2.5 text-right font-mono text-amber-300">₹ ${s.awaiting_inspection.toFixed(4)}</td>
+          <td class="p-2.5 text-right font-mono text-emerald-300">₹ ${s.flash_voi.toFixed(4)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCharts(selectedYear, selectedMonth, selectedCust, activeSummary) {
+      // 1. Doughnut Chart (Customer Share)
+      const pieCtx = document.getElementById('customerPieChart').getContext('2d');
+      const pieData = activeSummary.filter(s => s.indentor !== 'Grand Total' && s.monthly_sale > 0);
+
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: pieData.map(s => s.indentor),
+          datasets: [{
+            data: pieData.map(s => s.monthly_sale),
+            backgroundColor: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+          }
+        }
+      });
+
+      // 2. Bar Chart (Month-on-Month Revenue + Cumulative Progress)
+      const barCtx = document.getElementById('monthlyBarChart').getContext('2d');
+      const yearDataset = multiYearData[selectedYear] || {};
+
+      const monthlySales = monthList.map(m => {
+        const list = yearDataset[m] || [];
+        if (selectedCust === "ALL") {
+          const gt = list.find(s => s.indentor === "Grand Total");
+          return gt ? gt.monthly_sale : 0;
+        } else {
+          const item = list.find(s => s.indentor === selectedCust);
+          return item ? item.monthly_sale : 0;
+        }
+      });
+
+      const cumSales = monthList.map(m => {
+        const list = yearDataset[m] || [];
+        if (selectedCust === "ALL") {
+          const gt = list.find(s => s.indentor === "Grand Total");
+          return gt ? gt.cum_sale : 0;
+        } else {
+          const item = list.find(s => s.indentor === selectedCust);
+          return item ? item.cum_sale : 0;
+        }
+      });
+
+      if (barChart) barChart.destroy();
+      barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: monthList,
+          datasets: [
+            {
+              label: 'Monthly Sale Value (₹ Cr)',
+              data: monthlySales,
+              backgroundColor: '#3b82f6',
+              borderRadius: 4
+            },
+            {
+              label: 'Cumulative Progress (₹ Cr)',
+              data: cumSales,
+              backgroundColor: '#10b981',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+          },
+          plugins: {
+            legend: { labels: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    // Initialize Dashboard
+    window.onload = function() {
+      updateDashboard();
+    };
+  </script>
+</body>
+</html>
